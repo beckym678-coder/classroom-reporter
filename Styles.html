@@ -1,0 +1,176 @@
+<style>
+  :root {
+    color-scheme: light dark;
+    font-family: 'Google Sans', 'Helvetica Neue', Arial, sans-serif;
+    background: #f5f5f5;
+    color: #1f1f1f;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: #f5f5f5;
+  }
+
+  .app-header {
+    background: #1a73e8;
+    color: #fff;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .app-header h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.75rem;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  }
+
+  h2 {
+    margin-top: 0;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+
+  label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  select,
+  input[type='date'] {
+    padding: 0.5rem;
+    border: 1px solid #c5c5c5;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  button {
+    appearance: none;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #1a73e8;
+    color: #fff;
+  }
+
+  button.secondary {
+    background: #f1f3f4;
+    color: #1f1f1f;
+  }
+
+  button:disabled {
+    background: #c5c5c5;
+    cursor: not-allowed;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .metric {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .metric span {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: #f1f3f4;
+    font-weight: 600;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .status-MISSING {
+    background: #fce8e6;
+    color: #c5221f;
+  }
+
+  .status-RETURNED {
+    background: #e6f4ea;
+    color: #0f9d58;
+  }
+
+  .status-TURNED_IN {
+    background: #e8f0fe;
+    color: #1a73e8;
+  }
+
+  .status-ASSIGNED {
+    background: #f1f3f4;
+    color: #1f1f1f;
+  }
+
+  .empty-state {
+    padding: 1rem;
+    border: 1px dashed #dadce0;
+    border-radius: 8px;
+    text-align: center;
+    color: #5f6368;
+  }
+
+  .help-text {
+    color: #5f6368;
+    margin-top: 0.5rem;
+  }
+</style>
