@@ -1,0 +1,200 @@
+<script>
+  const startup = <?= JSON.stringify(startup) ?>;
+  const state = {
+    rosterCache: {},
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    populateCourses(startup.courses || []);
+    document.getElementById('report-form').addEventListener('submit', handleSubmit);
+    document.getElementById('course-select').addEventListener('change', onCourseChange);
+  });
+
+  function populateCourses(courses) {
+    const select = document.getElementById('course-select');
+    select.innerHTML = '<option value="" disabled selected>Select a course</option>';
+    courses.forEach((course) => {
+      const option = document.createElement('option');
+      option.value = course.id;
+      option.textContent = course.section ? `${course.name} (${course.section})` : course.name;
+      select.appendChild(option);
+    });
+  }
+
+  function onCourseChange(event) {
+    const courseId = event.target.value;
+    const studentSelect = document.getElementById('student-select');
+    studentSelect.disabled = true;
+    studentSelect.innerHTML = '';
+
+    if (state.rosterCache[courseId]) {
+      renderRoster(state.rosterCache[courseId]);
+      return;
+    }
+
+    showStatus('Loading roster…');
+    google.script.run
+      .withSuccessHandler((response) => {
+        state.rosterCache[courseId] = response;
+        renderRoster(response);
+        hideStatus();
+      })
+      .withFailureHandler(handleError)
+      .getCourseRoster(courseId);
+  }
+
+  function renderRoster(payload) {
+    const studentSelect = document.getElementById('student-select');
+    studentSelect.disabled = false;
+    studentSelect.innerHTML = '<option value="" disabled selected>Select a student</option>';
+    payload.students.forEach((student) => {
+      const option = document.createElement('option');
+      option.value = student.userId;
+      option.textContent = `${student.name} (${student.email})`;
+      studentSelect.appendChild(option);
+    });
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    const submitter = event.submitter || event.target.querySelector('button[type="submit"]');
+    const action = submitter.dataset.action || 'summary';
+
+    const formData = new FormData(event.target);
+    const payload = {
+      courseId: formData.get('courseId'),
+      userId: formData.get('userId'),
+      startDate: formData.get('startDate') || null,
+      endDate: formData.get('endDate') || null,
+    };
+
+    if (!payload.courseId || !payload.userId) {
+      handleError('Select both a course and a student to continue.');
+      return;
+    }
+
+    showStatus('Generating report…');
+
+    const runner = google.script.run.withSuccessHandler((data) => {
+      hideStatus();
+      if (action === 'missing') {
+        renderMissingWork(data);
+      } else {
+        renderStudentSummary(data);
+      }
+    });
+
+    runner.withFailureHandler(handleError);
+
+    if (action === 'missing') {
+      runner.getMissingWorkReport(payload);
+    } else {
+      runner.getStudentSummaryReport(payload);
+    }
+  }
+
+  function renderStudentSummary(data) {
+    document.getElementById('summary-card').hidden = false;
+    document.getElementById('missing-card').hidden = true;
+
+    const metrics = data.summary;
+    const activities = data.activities;
+    const summaryEl = document.getElementById('summary-content');
+    summaryEl.innerHTML = `
+      <div class="metrics-grid">
+        ${renderMetric('Assigned', metrics.totalAssigned)}
+        ${renderMetric('Turned in', metrics.turnedIn)}
+        ${renderMetric('Returned', metrics.returned)}
+        ${renderMetric('Graded', metrics.graded)}
+        ${renderMetric('Missing', metrics.missing)}
+        ${renderMetric('Late', metrics.late)}
+      </div>
+      ${renderActivitiesTable(activities)}
+    `;
+  }
+
+  function renderMissingWork(data) {
+    document.getElementById('missing-card').hidden = false;
+    document.getElementById('summary-card').hidden = true;
+
+    const container = document.getElementById('missing-content');
+    if (!data.assignments.length) {
+      container.innerHTML = '<div class="empty-state">No missing assignments 🎉</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <p><strong>${data.totalMissing}</strong> assignments need attention.</p>
+      ${renderActivitiesTable(data.assignments)}
+    `;
+  }
+
+  function renderMetric(label, value) {
+    return `
+      <div class="metric">
+        <span>${value}</span>
+        <div>${label}</div>
+      </div>
+    `;
+  }
+
+  function renderActivitiesTable(activities) {
+    if (!activities.length) {
+      return '<div class="empty-state">No activity for the selected window.</div>';
+    }
+
+    const rows = activities
+      .map((item) => {
+        const statusClass = `status-pill status-${item.status.code}`;
+        const submittedLabel = item.submittedAt ? item.submittedAt : '—';
+        const grade = item.grade || '—';
+        const due = item.dueDateLabel || 'No due date';
+        const link = item.link ? `<a href="${item.link}" target="_blank">Open</a>` : '—';
+        return `
+          <tr>
+            <td>${item.title}</td>
+            <td>${item.workType}</td>
+            <td>${due}</td>
+            <td><span class="${statusClass}">${item.status.label}</span></td>
+            <td>${submittedLabel}</td>
+            <td>${grade}</td>
+            <td>${link}</td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    return `
+      <table>
+        <thead>
+          <tr>
+            <th>Assignment</th>
+            <th>Type</th>
+            <th>Due</th>
+            <th>Status</th>
+            <th>Last updated</th>
+            <th>Grade</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function showStatus(message) {
+    const card = document.getElementById('status-card');
+    card.hidden = false;
+    document.getElementById('status-message').textContent = message;
+  }
+
+  function hideStatus() {
+    document.getElementById('status-card').hidden = true;
+  }
+
+  function handleError(error) {
+    console.error(error);
+    const message = typeof error === 'string' ? error : error && error.message ? error.message : 'Something went wrong.';
+    showStatus(message);
+  }
+</script>
